@@ -1,0 +1,13 @@
+{
+  "name": "text",
+  "version": "0.0.0",
+  "description": "Mah blog",
+  "homepage": "",
+  "author": "Jeremy Apthorp <nornagon@nornagon.net>",
+  "dependencies": {
+    "express": "~3.x",
+    "cradle": "*",
+    "mustache": "*",
+    "pagedown": "~1"
+  }
+}

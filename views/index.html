@@ -1,0 +1,203 @@
+<!doctype html>
+<head>
+<meta charset="utf-8">
+<link href='/fonts.css' rel='stylesheet' type='text/css'>
+<title></title>
+<style>
+html { height: 100%; }
+body { min-height: 100%; }
+html {
+  background-color: rgb(245, 245, 245);
+  background: url(/gray_jean.png);
+}
+body {
+  text-rendering: optimizeLegibility;
+  font-family: 'Alegreya', Candara, serif;
+  margin: 0;
+  background-color: hsla(0, 0%, 100%, 0.4);
+  display: inline-block;
+  width: 100%;
+}
+#ideas > ul, #published > ul {
+  list-style: none;
+  font: 30px Galdeano;
+  text-shadow: 0px 1px 1px rgba(255,255,255,0.9), 0px 1px 3px rgba(0,0,0,0.15);
+  margin: 0;
+  padding: 0;
+}
+li {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+#ideas {
+  margin-right: 4em;
+}
+
+#main {
+  display: -webkit-flex;
+  -webkit-flex-direction: row;
+  margin: 100px 140px 100px 140px;
+}
+#main > div {
+  -webkit-flex: 1;
+}
+
+#main > div > h1 {
+  font: 16px/30px 'Alegreya SC';
+  text-transform: lowercase;
+}
+#published {
+  color: hsl(0, 0%, 50%);
+}
+
+li {
+  border-top: 1px dotted lightgray;
+  padding-left: 0.4em;
+}
+li:first-child {
+  border-top: none;
+}
+
+input.idea {
+  font: inherit;
+  border: 0;
+  background: transparent;
+  outline: 0;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+* {
+  box-sizing: border-box;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.remove {
+  opacity: 0;
+  -webkit-transition: 200ms;
+  float: right;
+  display: block;
+}
+li:hover .remove {
+  opacity: 1;
+}
+</style>
+</head>
+<body>
+  <div id='main'>
+    <div id='ideas'>
+      <h1>Ideas</h1>
+      <ul>
+        <li style='padding-top:0;padding-bottom:0'><input style='margin:10px 0 10px 0' class='idea' placeholder='A new idea...'/>
+        {{#ideas}}
+        <li><a href="/{{slug}}/edit">{{title}}</a><a
+          href='' onclick='removePost("{{slug}}",this); return false' class='remove'>x</a></li>
+        {{/ideas}}
+      </ul>
+    </div>
+    <div id='published'>
+      <h1>Published</h1>
+      <ul>
+        {{#published}}
+        <li><a href="/{{slug}}">{{title}}</a></li>
+        {{/published}}
+      </ul>
+    </div>
+  </div>
+  <script>
+    slugFromTitle = {{{slugFromTitle}}};
+    (function() {
+      var input = document.querySelector('input.idea')
+      var ul = document.querySelector('#ideas ul')
+      input.onkeydown = function(e) {
+        if (e.keyCode == 13) {
+          e.preventDefault()
+          var newItem = document.createElement('li')
+          var a = newItem.appendChild(document.createElement('a'))
+          var title = input.value
+          a.textContent = title
+          var slug = slugFromTitle(title)
+          a.href = '/'+slug+'/edit'
+          var removeLink = newItem.appendChild(document.createElement('a'))
+          removeLink.onclick = function() { removePost(slug, this); return false }
+          removeLink.href = ''
+          removeLink.className = 'remove'
+          removeLink.textContent = 'x'
+          newItem.style.background = 'hsla(0,10%,60%,0.1)'
+
+          var req = new XMLHttpRequest
+          req.open('POST', window.location.origin + '/api/add', true)
+          req.onreadystatechange = function() {
+            if (req.readyState == 4) {
+              newItem.style.webkitTransition = '400ms'
+              if (req.status == 200) {
+                var data = JSON.parse(req.responseText)
+                if (data.ok) {
+                  newItem.style.background = 'transparent'
+                  return
+                }
+              }
+              newItem.style.background = 'hsla(0,90%,60%,0.5)'
+            }
+          }
+          req.send(JSON.stringify({ title: title }))
+
+          ul.insertBefore(newItem, input.parentNode.nextSibling)
+          input.value = ''
+          var cs = getComputedStyle(input.parentNode)
+          var oldHeight = cs.height
+          input.parentNode.style.overflow = 'hidden'
+          input.parentNode.style.webkitTransition = 'none'
+          input.parentNode.style.height = '0'
+          input.parentNode.offsetHeight; // force recalc
+          input.parentNode.style.webkitTransition = '200ms'
+          input.parentNode.style.height = oldHeight
+          input.parentNode.addEventListener('webkitTransitionEnd', function handler() {
+            input.parentNode.style.webkitTransition = 'initial'
+            input.parentNode.style.height = 'initial'
+            input.parentNode.removeEventListener('webkitTransitionEnd', handler);
+          })
+        }
+      }
+    })();
+
+    function removePost(slug, a) {
+      var li = a.parentNode
+      li.style.webkitTransition = 'initial'
+      li.style.height = getComputedStyle(li).height
+      var done = function() {
+        li.style.webkitTransition = '400ms'
+        li.style.overflow = 'hidden'
+        li.style.height = '0px'
+        li.style.paddingBottom = li.style.paddingTop = '0px'
+        li.addEventListener('webkitTransitionEnd', function end() {
+          li.removeEventListener('webkitTransitionEnd', end);
+          li.parentNode.removeChild(li)
+        })
+      }
+      var req = new XMLHttpRequest
+      req.open('POST', window.location.origin + '/api/delete', true)
+      req.onreadystatechange = function() {
+        if (req.readyState == 4) {
+          if (req.status == 200) {
+            try {
+              var data = JSON.parse(req.responseText)
+              if (data.ok) {
+                done()
+                return
+              }
+            } catch (e) {
+              console.log('bad json', e)
+            }
+          }
+          li.style.background = 'hsla(0,90%,60%,0.5)'
+        }
+      }
+      req.send(JSON.stringify({ slug: slug }))
+    }
+  </script>
+</body>

@@ -1,0 +1,278 @@
+<!doctype html>
+<head>
+<meta charset="utf-8">
+<link href='/fonts.css' rel='stylesheet' type='text/css'>
+<script src='/Markdown.Converter.js'></script>
+<title>{{title}}</title>
+<style>
+  html { height: 100%; }
+  body { min-height: 100%; }
+
+html {
+  background-color: rgb(245, 245, 245);
+  background: url(/gray_jean.png);
+}
+
+body {
+  text-rendering: optimizeLegibility;
+  font-family: 'Alegreya', Candara, serif;
+  margin: 0;
+  background-color: hsla(0, 0%, 100%, 0.4);
+}
+
+#main {
+  width: 30em;
+  margin: 100px 0px 100px 140px;
+  display: inline-block;
+}
+h1, h2, h3, h4, h5, h6 {
+	font-family: 'Galdeano';
+	font-weight: normal;
+	font-size: 18px;
+	line-height: 25px;
+	margin: 0 0 1em 0;
+	padding: 0;
+  text-shadow: 0px 1px 1px rgba(255,255,255,0.9), 0px 1px 3px rgba(0,0,0,0.15);
+}
+h1 {
+	margin-left: -5px;
+	font-size: 30px;
+}
+
+.badge {
+  font-family: 'Alegreya';
+  margin-bottom: 0;
+  font-size: 120px;
+  line-height: 0;
+  text-shadow: 0px 1px 1px rgba(255,255,255,0.9), 0px 1px 3px rgba(0,0,0,0.15);
+  position: relative;
+  top: 40px;
+  left: -80px;
+}
+
+.content {
+  outline: none;
+}
+
+
+#main .edit {
+  display: none;
+}
+#main.editing .edit {
+  display: block;
+}
+#main.editing .content {
+  display: none;
+}
+
+#main .doneLink {
+  display: none;
+}
+#main.editing .doneLink {
+  display: initial;
+}
+#main.editing .editLink {
+  display: none;
+}
+
+textarea, 
+pre {
+  margin: 0;
+  padding: 0;
+  outline: 0;
+  border: 0;
+}
+.expandingArea {
+  position: relative;
+  background: transparent;
+  border: 2px dashed rgba(0,0,0,0.05);
+  border-radius: 4px;
+}
+.expandingArea > textarea,
+.expandingArea > pre {
+  padding: 5px;
+  background: transparent;
+  font: 400 13px/16px helvetica, arial, sans-serif;
+  font-family: 'PT Mono';
+  font-size: 16px;
+  /* Make the text soft-wrap */
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  text-rendering: inherit;
+}
+.expandingArea > textarea {
+  /* The border-box box model is used to allow
+   * padding whilst still keeping the overall width
+   * at exactly that of the containing element.
+   */
+  -webkit-box-sizing: border-box;
+     -moz-box-sizing: border-box;
+      -ms-box-sizing: border-box;
+          box-sizing: border-box;
+  width: 100%;
+  /* This height is used when JS is disabled */
+  height: 100px;
+}
+.expandingArea.active > textarea {
+  /* Hide any scrollbars */
+  overflow: hidden;
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  /* Remove WebKit user-resize widget */
+  resize: none;
+}
+.expandingArea > pre {
+  display: none;
+}
+.expandingArea.active > pre {
+  display: block;
+  /* Hide the text; just using it for sizing */
+  visibility: hidden;
+}
+
+a {
+  color: inherit;
+}
+a:hover {
+  text-shadow: 0px 0px 3px rgba(0,0,0,0.2);
+}
+
+</style>
+</head>
+<body>
+  <div id='main'>
+{{#post}}
+    <div class='badge'>*</div>
+    <div class='content'>
+      <h1 class='title'>{{title}}</h1>
+      <div class='body'>{{{body}}}</div>
+    </div>
+{{/post}}
+{{#model}}
+    <div class='edit'>
+      <textarea id='edit-title'></textarea>
+      <p><textarea id='edit-text'></textarea></p>
+    </div>
+    <a class='editLink' href='javascript:edit()'>edit</a>
+    <a class='doneLink' href='javascript:done()'>preview</a>
+{{/model}}
+  </div>
+{{#model}}
+<script>
+  /* Adapted from
+  http://www.alistapart.com/articles/expanding-text-areas-made-elegant/ */
+function makeExpandingArea(area) {
+  var container = document.createElement('div');
+  container.className = 'expandingArea';
+  var pre = container.appendChild(document.createElement('pre'))
+  var span = pre.appendChild(document.createElement('span'));
+  pre.appendChild(document.createElement('br'));
+  area.parentNode.insertBefore(container, area);
+  container.appendChild(area);
+  area.addEventListener('input', function() {
+    span.textContent = area.value;
+  }, false);
+  span.textContent = area.value;
+  container.className += ' active';
+  return container;
+}
+</script>
+<script>
+  var model = {{{model}}};
+  (function() {
+    var areas = document.getElementsByTagName('textarea');
+    var title = areas[0];
+    var body = areas[1];
+    body.textContent = model.body;
+    makeExpandingArea(body);
+    title.textContent = model.title
+    var t = makeExpandingArea(title);
+    t.querySelector('textarea').style.font = '30px Galdeano'
+    t.querySelector('pre').style.font = '30px Galdeano'
+    t.style.marginLeft = '-5px';
+    t.parentNode.style.marginLeft = '-7px'
+    t.parentNode.style.marginTop = '-11px'
+
+    title.addEventListener('input', function() {
+      update()
+    })
+    body.addEventListener('input', function() {
+      update()
+    })
+  })()
+  function update() {
+    var oldModel = JSON.stringify(model)
+    model.body = document.getElementById('edit-text').value;
+    model.title = document.getElementById('edit-title').value;
+    var newModel = JSON.stringify(model)
+    if (oldModel != newModel) {
+      if (inFlight) {
+        needsUpdate = true;
+      } else {
+        sendUpdate();
+      }
+    }
+  }
+  function xhr(method, url, data, cb) {
+    var req = new XMLHttpRequest
+    req.open(method, url, true)
+    req.onreadystatechange = function() {
+      if (req.readyState == 4) {
+        if (req.status == 200)
+          cb(null, req.responseText)
+        else
+          cb(req.status)
+      }
+    }
+    req.send(data)
+  }
+  var needsUpdate = false;
+  var inFlight = false;
+  function sendUpdate() {
+    inFlight = true;
+    needsUpdate = false;
+    var data = {id:model._id, update:{title:model.title, body:model.body}}
+    xhr('POST', window.location.origin + '/api/update', JSON.stringify(data), function(err, data) {
+      try {
+        var data = JSON.parse(req.responseText)
+        if (data.ok)
+          done()
+        else
+          fail()
+      } catch (e) {
+        console.log('bad json', e)
+        fail()
+      }
+    });
+    function done() {
+      inFlight = false;
+      if (needsUpdate)
+        sendUpdate()
+    }
+    function fail() {
+      needsUpdate = true
+      done()
+    }
+  }
+</script>
+<script>
+  md = new Markdown.Converter()
+  function edit() {
+    var main = document.querySelector('#main')
+    main.classList.add('editing')
+  }
+  function done() {
+    document.querySelector('.body').innerHTML =
+        md.makeHtml(document.getElementById('edit-text').value);
+    document.querySelector('.title').innerHTML =
+        document.getElementById('edit-title').value;
+    var main = document.querySelector('#main')
+    main.classList.remove('editing')
+  }
+  // hax
+  edit()
+</script>
+{{/model}}
+</body>
