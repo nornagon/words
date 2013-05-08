@@ -236,7 +236,7 @@ function makeExpandingArea(area) {
     var data = {id:model._id, update:{title:model.title, body:model.body}}
     xhr('POST', window.location.origin + '/api/update', JSON.stringify(data), function(err, data) {
       try {
-        var data = JSON.parse(req.responseText)
+        var data = JSON.parse(data)
         if (data.ok)
           done()
         else
