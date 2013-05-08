@@ -116,5 +116,5 @@ app.get '/:slug', (req, res) ->
 app.get '/:slug/edit', (req, res) ->
   renderPost req, res, model: true
 
-app.listen 3000
+app.listen process.argv[2] ? 8000
 console.log "Listening on http://localhost:3000"
