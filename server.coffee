@@ -161,6 +161,7 @@ renderPost = (req, res, opts = {}) ->
       res.end()
       return
     opts.post = posts[0].doc
+    opts.model = !!opts.model
     opts.md = md
     res.render 'text', opts
 
