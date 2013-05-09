@@ -156,7 +156,8 @@ a:hover {
   </div>
   <a class='editLink' href='javascript:edit()'>edit</a>
   <a class='doneLink' href='javascript:done()'>preview</a>
-  <a href='javascript:publish()'>publish</a>
+  <a class='publishLink' href='javascript:publish()'>publish</a>
+  <a class='unpublishLink' href='javascript:unpublish()'>unpublish</a>
   :}
 #}
   </div>
@@ -182,6 +183,13 @@ function makeExpandingArea(area) {
 </script>
 <script>
   var model = #{json post};
+  function updatePublishLinks() {
+    document.querySelector('.publishLink').style.display =
+        model.published ? 'none' : 'initial';
+    document.querySelector('.unpublishLink').style.display =
+        model.published ? 'initial' : 'none';
+  }
+  updatePublishLinks();
   (function() {
     var areas = document.getElementsByTagName('textarea');
     var title = areas[0];
@@ -231,6 +239,10 @@ function makeExpandingArea(area) {
     model.published = true
     setNeedsUpdate()
   }
+  function unpublish() {
+    model.published = false
+    setNeedsUpdate()
+  }
 
   var needsUpdate = false;
   var inFlight = false;
@@ -259,6 +271,7 @@ function makeExpandingArea(area) {
       }
     });
     function done() {
+      updatePublishLinks();
       inFlight = false;
       if (needsUpdate)
         sendUpdate()
