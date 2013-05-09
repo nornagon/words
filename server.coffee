@@ -44,7 +44,7 @@ app.post '/auth', (req, res, next) ->
   #
   # The audience field is hardcoded, and does not use the HTTP headers or anything. See:
   # https://developer.mozilla.org/en-US/docs/Persona/Security_Considerations
-  request.post 'https://verifier.login.persona.org/verify'
+  request.post 'https://verifier.login.persona.org/verify',
     form:
       audience:"localhost:#{port}"
       assertion:req.body.assertion
