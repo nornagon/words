@@ -1,0 +1,40 @@
+<!doctype html>
+<style>
+body {
+  padding: 50px;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  color: #333;
+}
+</style>
+<link rel="stylesheet" href="persona-buttons.css" />
+<h1>
+  Oh hai.
+</h1>
+<a id="loginbtn" class="persona-button"><span>Sign in</span></a>
+<script src="https://login.persona.org/include.js"></script>
+<form action='/auth' method='POST'>
+  <input id='assfield' type='hidden' name='assertion' value='' />
+  <input type='hidden' name='_csrf' value='#{csrf}' />
+</form>
+<script>
+  document.getElementById('loginbtn').onclick = function() {
+    navigator.id.request({siteName:'words'})
+  };
+
+  var onlogin = function(assertion) { 
+    assfield.value = assertion;
+    document.forms[0].submit();
+  };
+
+  var onlogout = function() {
+    console.log('logout');
+  };
+
+  var currentUser = #{json user};
+  navigator.id.watch({
+    loggedInUser: currentUser,
+    onlogin:onlogin,
+    onlogout:onlogout
+  });
+
+</script>

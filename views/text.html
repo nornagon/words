@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <link href='/fonts.css' rel='stylesheet' type='text/css'>
 <script src='/Markdown.Converter.js'></script>
-<title>{{title}}</title>
+<title>#{title}</title>
 <style>
   html { height: 100%; }
   body { min-height: 100%; }
@@ -143,23 +143,23 @@ a:hover {
 </head>
 <body>
   <div id='main'>
-{{#post}}
-    <div class='badge'>*</div>
-    <div class='content'>
-      <h1 class='title'>{{title}}</h1>
-      <div class='body'>{{{body}}}</div>
-    </div>
-{{/post}}
-{{#model}}
-    <div class='edit'>
-      <textarea id='edit-title'></textarea>
-      <p><textarea id='edit-text'></textarea></p>
-    </div>
-    <a class='editLink' href='javascript:edit()'>edit</a>
-    <a class='doneLink' href='javascript:done()'>preview</a>
-{{/model}}
+{# if post {:
+  <div class='badge'>*</div>
+  <div class='content'>
+    <h1 class='title'>#{post.title}</h1>
+    <div class='body'>#{raw body}</div>
   </div>
-{{#model}}
+:} #}
+{# if model {:
+  <div class='edit'>
+    <textarea id='edit-title'></textarea>
+    <p><textarea id='edit-text'></textarea></p>
+  </div>
+  <a class='editLink' href='javascript:edit()'>edit</a>
+  <a class='doneLink' href='javascript:done()'>preview</a>
+:} #}
+  </div>
+{# if model {:
 <script>
   /* Adapted from
   http://www.alistapart.com/articles/expanding-text-areas-made-elegant/ */
@@ -180,7 +180,7 @@ function makeExpandingArea(area) {
 }
 </script>
 <script>
-  var model = {{{model}}};
+  var model = #{json model};
   (function() {
     var areas = document.getElementsByTagName('textarea');
     var title = areas[0];
@@ -274,5 +274,5 @@ function makeExpandingArea(area) {
   // hax
   edit()
 </script>
-{{/model}}
+:} #}
 </body>

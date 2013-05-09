@@ -2,6 +2,14 @@
 <head>
 <meta charset="utf-8">
 <link href='/fonts.css' rel='stylesheet' type='text/css'>
+<script src="https://login.persona.org/include.js"></script>
+<script>
+  navigator.id.watch({
+    loggedInUser: #{json user},
+    onlogin: function() { },
+    onlogout: function() { window.location = '/logout' },
+  })
+</script>
 <title></title>
 <style>
 html { height: 100%; }
@@ -93,23 +101,27 @@ li:hover .remove {
       <h1>Ideas</h1>
       <ul>
         <li style='padding-top:0;padding-bottom:0'><input style='margin:10px 0 10px 0' class='idea' placeholder='A new idea...'/>
-        {{#ideas}}
-        <li><a href="/{{slug}}/edit">{{title}}</a><a
-          href='' onclick='removePost("{{slug}}",this); return false' class='remove'>x</a></li>
-        {{/ideas}}
+        {#
+          for p in ideas {:
+            <li><a href="/#{p.slug}/edit">#{p.title}</a><a
+              href='' onclick='removePost("#{p.slug}",this); return false' class='remove'>x</a></li>
+          :}
+        #}
       </ul>
     </div>
     <div id='published'>
       <h1>Published</h1>
       <ul>
-        {{#published}}
-        <li><a href="/{{slug}}">{{title}}</a></li>
-        {{/published}}
+        {#
+          for p in published {:
+            <li><a href="/#{p.slug}">#{p.title}</a></li>
+          :}
+        #}
       </ul>
     </div>
   </div>
   <script>
-    slugFromTitle = {{{slugFromTitle}}};
+    slugFromTitle = #{raw slugFromTitle};
     (function() {
       var input = document.querySelector('input.idea')
       var ul = document.querySelector('#ideas ul')

@@ -1,0 +1,13 @@
+<!doctype html>
+<script src="https://login.persona.org/include.js"></script>
+<script>
+  // Ugh, so navigator.id.logout() doesn't work until persona's been
+  // initialised or something, so we wait until we receive the onlogin message
+  // before calling logout.
+  navigator.id.watch({
+    onlogin: function() { navigator.id.logout() },
+    onlogout: function() { window.location = '/login' }
+  })
+  setTimeout(function(){navigator.id.logout()},0)
+</script>
+Logging out...
