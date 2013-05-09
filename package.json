@@ -8,6 +8,7 @@
     "express": "~3.x",
     "cradle": "*",
     "toffee": "*",
+    "request": "*",
     "pagedown": "~1",
     "consolidate": "*"
   }
