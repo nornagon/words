@@ -42,6 +42,9 @@ h1 {
   top: 40px;
   left: -80px;
 }
+.badge a {
+  text-decoration: none;
+}
 
 a {
   color: inherit;
