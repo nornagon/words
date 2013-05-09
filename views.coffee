@@ -6,6 +6,9 @@ designs =
     by_slug: (doc) ->
       if doc.type is 'post'
         emit doc.slug, null
+    published: (doc) ->
+      if doc.type is 'post' and doc.published
+        emit doc.created_at, null
 
 exports.push = (db) ->
 	for d of designs

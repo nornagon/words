@@ -143,21 +143,22 @@ a:hover {
 </head>
 <body>
   <div id='main'>
-{# if post {:
   <div class='badge'>*</div>
   <div class='content'>
     <h1 class='title'>#{post.title}</h1>
-    <div class='body'>#{raw post.body}</div>
+    <div class='body'>{# print md.makeHtml post.body #}</div>
   </div>
-:} #}
-{# if model {:
+{#
+  if model {:
   <div class='edit'>
     <textarea id='edit-title'></textarea>
     <p><textarea id='edit-text'></textarea></p>
   </div>
   <a class='editLink' href='javascript:edit()'>edit</a>
   <a class='doneLink' href='javascript:done()'>preview</a>
-:} #}
+  <a href='javascript:publish()'>publish</a>
+  :}
+#}
   </div>
 {# if model {:
 <script>
@@ -180,7 +181,7 @@ function makeExpandingArea(area) {
 }
 </script>
 <script>
-  var model = #{json model};
+  var model = #{json post};
   (function() {
     var areas = document.getElementsByTagName('textarea');
     var title = areas[0];
@@ -202,19 +203,6 @@ function makeExpandingArea(area) {
       update()
     })
   })()
-  function update() {
-    var oldModel = JSON.stringify(model)
-    model.body = document.getElementById('edit-text').value;
-    model.title = document.getElementById('edit-title').value;
-    var newModel = JSON.stringify(model)
-    if (oldModel != newModel) {
-      if (inFlight) {
-        needsUpdate = true;
-      } else {
-        sendUpdate();
-      }
-    }
-  }
   function xhr(method, url, data, cb) {
     var req = new XMLHttpRequest
     req.open(method, url, true)
@@ -228,12 +216,36 @@ function makeExpandingArea(area) {
     }
     req.send(data)
   }
+
+  function update() {
+    var oldModel = JSON.stringify(model)
+    model.body = document.getElementById('edit-text').value
+    model.title = document.getElementById('edit-title').value
+    var newModel = JSON.stringify(model)
+    if (oldModel != newModel) {
+      setNeedsUpdate()
+    }
+  }
+
+  function publish() {
+    model.published = true
+    setNeedsUpdate()
+  }
+
   var needsUpdate = false;
   var inFlight = false;
+  function setNeedsUpdate() {
+    if (inFlight) {
+      needsUpdate = true;
+    } else {
+      sendUpdate();
+    }
+  }
   function sendUpdate() {
     inFlight = true;
     needsUpdate = false;
-    var data = {id:model._id, update:{title:model.title, body:model.body}}
+    var data = {id:model._id, update:{title:model.title, body:model.body,
+        published:model.published}}
     xhr('POST', window.location.origin + '/api/update', JSON.stringify(data), function(err, data) {
       try {
         var data = JSON.parse(data)
@@ -252,6 +264,7 @@ function makeExpandingArea(area) {
         sendUpdate()
     }
     function fail() {
+      // TODO better error handling, incl. telling user.
       needsUpdate = true
       done()
     }

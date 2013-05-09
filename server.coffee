@@ -22,7 +22,7 @@ app.engine 'html', require('consolidate').toffee
 app.set 'view engine', 'html'
 app.set 'views', __dirname + '/views'
 
-app.use express.logger()
+#app.use express.logger()
 app.use express.static __dirname + '/static'
 app.use express.cookieParser 'asfasd;kghrgwtiug52bgy524oybg24v5 248 tv2o3qdhaliwencwqj-erv0t2'
 app.use express.session()
@@ -98,8 +98,7 @@ slugFromTitle = (title) ->
 
 
 app.get '/admin', restrict, (req, res) ->
-  db.view 'posts/by_date', { include_docs: true }, (err, posts) ->
-    posts.reverse()
+  db.view 'posts/by_date', { include_docs: true, descending: true }, (err, posts) ->
     res.setHeader 'cache-control', 'no-store'
     res.render 'admin',
       user: req.session.user
@@ -127,7 +126,7 @@ app.post '/api/update', restrict, (req, res) ->
     data = JSON.parse(buf)
     db.get data.id, (err, r) ->
       throw err if err
-      for k,v of data.update when k in ['title', 'body']
+      for k,v of data.update when k in ['title', 'body', 'published']
         r[k] = v
       db.save r._id, r._rev, r, (err, r) ->
         throw err if err
@@ -157,16 +156,19 @@ pd = require 'pagedown'
 md = new pd.Converter
 renderPost = (req, res, opts = {}) ->
   getPostBySlug req.params.slug, (err, posts) ->
-    if posts.length <= 0
+    if posts.length < 1
       # TODO 404
       res.end()
       return
-    p = posts[0].doc
-    if opts.model
-      opts.model = p
-    p.body = md.makeHtml p.body
-    opts.post = p
+    opts.post = posts[0].doc
+    opts.md = md
     res.render 'text', opts
+
+app.get '/', (req, res) ->
+  db.view 'posts/published', { include_docs: true, descending: true, limit: 10 }, (err, posts) ->
+    res.render 'index',
+      md: md
+      posts: (p.doc for p in posts)
 
 app.get '/:slug', (req, res) ->
   renderPost req, res
