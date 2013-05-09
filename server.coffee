@@ -46,7 +46,7 @@ app.post '/auth', (req, res, next) ->
   # https://developer.mozilla.org/en-US/docs/Persona/Security_Considerations
   request.post 'https://verifier.login.persona.org/verify',
     form:
-      audience:"localhost:#{port}"
+      audience:req.headers.host
       assertion:req.body.assertion
     (err, _, body) ->
       return next(err) if err
