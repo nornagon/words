@@ -124,6 +124,13 @@ function makeExpandingArea(area) {
   area.addEventListener('input', function() {
     span.textContent = area.value;
   }, false);
+  area.onkeydown = function(e) {
+    if (e.keyCode === 9) {
+      if (editing) done()
+      else edit()
+      e.preventDefault()
+    }
+  }
   span.textContent = area.value;
   container.className += ' active';
   return container;
@@ -232,18 +239,30 @@ function makeExpandingArea(area) {
   }
 </script>
 <script>
+  var editing = false;
+  var editScroll, previewScroll;
   md = new Markdown.Converter()
   function edit() {
+    if (editing) return;
+    editing = true;
+    previewScroll = window.scrollY;
     var main = document.querySelector('#main')
     main.classList.add('editing')
+    if (editScroll !== undefined) { debugger; window.scrollTo(window.scrollX,
+      editScroll) }
   }
   function done() {
+    if (!editing) return;
+    editing = false;
+    editScroll = window.scrollY;
     document.querySelector('.body').innerHTML =
         md.makeHtml(document.getElementById('edit-text').value);
     document.querySelector('.title').innerHTML =
         document.getElementById('edit-title').value;
     var main = document.querySelector('#main')
     main.classList.remove('editing')
+    if (previewScroll !== undefined) { debugger;
+      window.scrollTo(window.scrollX, previewScroll) }
   }
   // hax
   edit()
