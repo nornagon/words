@@ -57,3 +57,16 @@ strong {
   font-weight: normal;
   color: hsl(10, 100%, 37%);
 }
+
+pre > code {
+  display: block;
+  padding-left: 2em;
+}
+
+h2 > code {
+  font-size: 16px;
+}
+
+p > code {
+  font-size: 14px;
+}
