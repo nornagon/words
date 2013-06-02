@@ -213,8 +213,7 @@ function makeExpandingArea(area) {
   function sendUpdate() {
     inFlight = true;
     needsUpdate = false;
-    var data = {id:model._id, update:{title:model.title, body:model.body,
-        published:model.published}}
+    var data = {slug:model.slug, update:{title:model.title, body:model.body, published:model.published}}
     xhr('POST', window.location.origin + '/api/update', JSON.stringify(data), function(err, data) {
       try {
         var data = JSON.parse(data)
@@ -260,7 +259,7 @@ function makeExpandingArea(area) {
     previewScroll = window.scrollY;
     var main = document.querySelector('#main')
     main.classList.add('editing')
-    if (editScroll !== undefined) { debugger; window.scrollTo(window.scrollX,
+    if (editScroll !== undefined) { window.scrollTo(window.scrollX,
       editScroll) }
   }
   function done() {
@@ -273,7 +272,7 @@ function makeExpandingArea(area) {
         document.getElementById('edit-title').value;
     var main = document.querySelector('#main')
     main.classList.remove('editing')
-    if (previewScroll !== undefined) { debugger;
+    if (previewScroll !== undefined) { 
       window.scrollTo(window.scrollX, previewScroll) }
   }
   // hax

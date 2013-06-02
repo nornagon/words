@@ -1,20 +1,91 @@
 express = require 'express'
-cradle = require 'cradle'
 events = require 'events'
 request = require 'request'
+level = require 'level'
+marked = require 'marked'
 
-OWNER = "nornagon@nornagon.net"
+hljs = require('highlight.js')
+marked.setOptions highlight: (code, lang) ->
+  # If the language is wacky, this throws.
+  try
+    if lang
+      hljs.highlight(lang, code).value
+    else
+      hljs.highlightAuto(code).value
+  catch
+    code
 
-couch = new (cradle.Connection)('http://localhost', 5984, {
-	cache: false,
-	raw: false,
-})
-db = couch.database('text')
-db.exists (err, exists) ->
-  throw err if err
-  if not exists
-    db.create()
-  require('./views').push(db)
+OWNER = 'josephg@gmail.com'
+
+db = level 'text', valueEncoding: 'json'
+
+reindex = (callback) ->
+  ws = db.createWriteStream type:'del'
+  rs = db.createReadStream start:'idx/', end:'idx/~', valueEncoding:'utf8'
+  rs.pipe(ws).on 'close', ->
+    rs = db.createValueStream start:'posts/', end:'posts/~'
+    batch = db.batch()
+
+    rs.on 'data', (d) -> indexPost d, batch
+    rs.on 'close', ->
+      console.log 'reindexed'
+      batch.write callback
+
+indexPost = (post, batch) ->
+  batch.put "idx/by_date/#{post.created_at}", post.slug, valueEncoding:'utf8'
+
+  if post.published
+    batch.put "idx/published/#{post.created_at}", post.slug, valueEncoding:'utf8'
+  else
+    batch.del "idx/published/#{post.created_at}"
+
+deIndex = (post, batch) ->
+  batch.del "idx/by_date/#{post.created_at}"
+  if post.published
+    batch.del "idx/published/#{post.created_at}"
+
+
+#reindex()
+
+getPosts = (path, limit, callback) ->
+  # Published posts are indexed by creation time.
+  rs = db.createValueStream
+    start: path
+    end: path + '~'
+    keys: no
+    limit: limit
+    valueEncoding: 'utf8'
+
+  docs = []
+  tasks = 0
+  idx = 0
+  
+  doneTask = ->
+    tasks++
+    if tasks == docs.length + 1
+      callback null, docs
+
+  rs.on 'data', (slug) ->
+    i = idx++
+    db.get "posts/#{slug}", (err, data) ->
+      #console.log 'getposts', err, data
+      docs[i] = data
+      doneTask()
+
+  rs.on 'close', doneTask
+
+putPost = (post, callback) ->
+  batch = db.batch().put "posts/#{post.slug}", post
+  indexPost post, batch
+  batch.write callback
+
+delPost = (slug, callback) ->
+  db.get "posts/#{slug}", (err, post) ->
+    batch = db.batch().del "posts/#{slug}"
+    deIndex post, batch
+    batch.write (err) ->
+      #console.log 'deindex err', err
+      callback err
 
 app = express()
 
@@ -22,9 +93,10 @@ app.engine 'html', require('consolidate').toffee
 app.set 'view engine', 'html'
 app.set 'views', __dirname + '/views'
 
-#app.use express.logger()
+app.use express.logger 'dev'
 app.use express.static __dirname + '/static'
-app.use express.cookieParser 'asfasd;kghrgwtiug52bgy524oybg24v5 248 tv2o3qdhaliwencwqj-erv0t2'
+app.use express.static __dirname + '/node_modules/marked/lib'
+app.use express.cookieParser 'asdkfkajhdfawefhakej faljkwef lkawef akwjhf'
 app.use express.session()
 app.use express.bodyParser()
 #app.use express.csrf()
@@ -33,6 +105,9 @@ app.use express.bodyParser()
 # You could improve this by setting a redirect URL to the login page, and then redirecting back
 # after they've authenticated.
 restrict = (req, res, next) ->
+  return next()
+
+
   return next() if req.session.user
   res.redirect '/login'
 
@@ -78,8 +153,6 @@ app.get '/logout', restrict, (req, res, next) ->
 app.get '/login', (req, res) ->
   res.render 'login', csrf:req.session._csrf, user:req.session.user
 
-
-
 complete = (req, cb) ->
   buffer = new Buffer 0
   ee = new events.EventEmitter
@@ -96,15 +169,14 @@ complete = (req, cb) ->
 slugFromTitle = (title) ->
   title.toLowerCase().replace(/[^a-z]+/g, '-').substr(0,25).replace(/-$/,'')
 
-
 app.get '/admin', restrict, (req, res) ->
-  db.view 'posts/by_date', { include_docs: true, descending: true }, (err, posts) ->
+  getPosts 'idx/by_date/', null, (err, posts) ->
     res.setHeader 'cache-control', 'no-store'
     res.render 'admin',
       user: req.session.user
       slugFromTitle: slugFromTitle.toString()
-      ideas: (p.doc for p in posts when !p.doc.published)
-      published: (p.doc for p in posts when p.doc.published)
+      ideas: (p for p in posts when !p.published)
+      published: (p for p in posts when p.published)
 
 app.post '/api/add', restrict, (req, res) ->
   complete req, (buf) ->
@@ -116,60 +188,47 @@ app.post '/api/add', restrict, (req, res) ->
       published: data.published ? false
       created_at: (new Date).toISOString()
       slug: data.slug ? slugFromTitle(data.title)
-    db.save post, (err, r) ->
-      if err
-        return res.end JSON.stringify ok: no, err: err
+    putPost post, (err) ->
+      return res.end JSON.stringify ok: no, err: err if err
       res.end JSON.stringify ok: yes
 
 app.post '/api/update', restrict, (req, res) ->
   complete req, (buf) ->
     data = JSON.parse(buf)
-    db.get data.id, (err, r) ->
+    getPostBySlug data.slug, (err, r) ->
       throw err if err
       for k,v of data.update when k in ['title', 'body', 'published']
         r[k] = v
-      db.save r._id, r._rev, r, (err, r) ->
+      putPost r, (err) ->
         throw err if err
         res.end JSON.stringify ok: yes
 
 app.post '/api/delete', restrict, (req, res) ->
   complete req, (buf) ->
     data = JSON.parse buf
-    getPostBySlug data.slug, (err, posts) ->
-      if posts.length <= 0
-        # TODO 404
-        return res.end()
-      p = posts[0]
-      db.remove p.id, p.doc._rev, (err, r) ->
-        if err
-          return res.end JSON.stringify ok: no, err: err
-        res.end JSON.stringify ok: yes
+    delPost data.slug, (err) ->
+      if err
+        return res.end JSON.stringify ok: no, err: err
+      res.end JSON.stringify ok: yes
 
-getPostBySlug = (slug, cb) ->
-  db.view 'posts/by_slug', {
-    include_docs: true
-    startkey: slug
-    endkey: slug
-  }, cb
+getPostBySlug = (slug, cb) -> db.get "posts/#{slug}", cb
 
-pd = require 'pagedown'
-md = new pd.Converter
 renderPost = (req, res, opts = {}) ->
-  getPostBySlug req.params.slug, (err, posts) ->
-    if posts.length < 1
-      # TODO 404
-      res.end()
-      return
-    opts.post = posts[0].doc
+  getPostBySlug req.params.slug, (err, post) ->
+    # TODO 404
+    return res.end() if !post
+
+    opts.post = post
     opts.model = !!opts.model
-    opts.md = md
+    opts.md = marked
     res.render 'text', opts
 
 app.get '/', (req, res) ->
-  db.view 'posts/published', { include_docs: true, descending: true, limit: 10 }, (err, posts) ->
-    res.render 'index',
-      md: md
-      posts: (p.doc for p in posts)
+  last = process.hrtime()
+
+  getPosts 'idx/published/', 10, (err, posts) ->
+    #db.view 'posts/published', { include_docs: true, descending: true, limit: 10 }, (err, posts) ->
+    res.render 'index', md: marked, posts: posts
 
 app.get '/:slug', (req, res) ->
   renderPost req, res

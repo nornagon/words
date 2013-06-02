@@ -3,7 +3,7 @@ body { min-height: 100%; }
 
 html {
   background-color: rgb(245, 245, 245);
-  background: url(/gray_jean.png);
+  background: url(/squairy_light.png);
 }
 
 body {
@@ -61,6 +61,8 @@ strong {
 pre > code {
   display: block;
   padding-left: 2em;
+  padding-bottom: 1em;
+  border-radius: 3px;
 }
 
 h2 > code {
