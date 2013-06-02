@@ -2,8 +2,10 @@
 <head>
 <meta charset="utf-8">
 <link href='/fonts.css' rel='stylesheet' type='text/css'>
+<link href='/code.css' rel='stylesheet' type='text/css'>
 <link href='/style.css' rel='stylesheet' type='text/css'>
-<script src='/Markdown.Converter.js'></script>
+<script src='/marked.js'></script>
+<script src='/highlight.pack.js'></script>
 <title>#{post.title}</title>
 <style>
 .content {
@@ -40,7 +42,7 @@ pre {
 .expandingArea {
   position: relative;
   background: transparent;
-  border: 2px dashed rgba(0,0,0,0.05);
+  border: 2px dashed rgba(0,0,0,0.15);
   border-radius: 4px;
 }
 .expandingArea > textarea,
@@ -94,7 +96,7 @@ pre {
   <div class='badge'><a href='/{# if model then print "admin" #}'>*</a></div>
   <div class='content'>
     <h1 class='title'>#{post.title}</h1>
-    <div class='body'>{# print md.makeHtml post.body #}</div>
+    <div class='body'>{# print md post.body #}</div>
   </div>
 {#
   if model {:
@@ -241,7 +243,17 @@ function makeExpandingArea(area) {
 <script>
   var editing = false;
   var editScroll, previewScroll;
-  md = new Markdown.Converter()
+  marked.setOptions({
+    highlight: function(code, lang) {
+      try {
+        if (lang) {
+          return hljs.highlight(lang, code).value;
+        } else {
+          return hljs.highlightAuto(code).value;
+        }
+      } catch (e) { return code; }
+    }
+  });
   function edit() {
     if (editing) return;
     editing = true;
@@ -256,7 +268,7 @@ function makeExpandingArea(area) {
     editing = false;
     editScroll = window.scrollY;
     document.querySelector('.body').innerHTML =
-        md.makeHtml(document.getElementById('edit-text').value);
+        marked(document.getElementById('edit-text').value);
     document.querySelector('.title').innerHTML =
         document.getElementById('edit-title').value;
     var main = document.querySelector('#main')
