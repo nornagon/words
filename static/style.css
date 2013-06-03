@@ -11,10 +11,12 @@ body {
   font-family: 'Alegreya', Candara, serif;
   margin: 0;
   background-color: hsla(0, 0%, 100%, 0.4);
+  color: #222;
+  font-size: 18px;
 }
 
 #main {
-  width: 30em;
+  width: 34em;
   margin: 100px 0px 100px 140px;
   display: inline-block;
 }
@@ -55,27 +57,23 @@ a:hover {
 
 strong {
   font-weight: normal;
-  color: hsl(10, 100%, 37%);
+  color: rgb(139, 23, 0);
 }
 
 pre > code {
+  font-size: 14px;
   display: block;
-  /*padding-left: 2em;*/
-  padding-bottom: 1em;
+  padding: 1em 1em 1.2em 0.5em;
+  width: 45em;
 
   border-radius: 3px;
   border: 1px solid rgb(146, 146, 146);
-  background: rgb(226, 226, 226);
-}
-
-h2 > code {
-  font-size: 16px;
+  background: rgb(230, 230, 230);
 }
 
 p > code {
-  font-size: 14px;
+  font-size: 15px;
   background-color: rgb(216, 216, 216);
-  color: rgb(43, 43, 43);
   padding: 0px 2px 0px 2px;
 }
 
