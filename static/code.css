@@ -1,52 +1,50 @@
-/* Tomorrow Night Theme */
-/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
-/* Original theme - https://github.com/chriskempson/tomorrow-theme */
-/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
-.tomorrow-comment, pre .comment, pre .title {
-  color: #969896;
-}
+﻿/*
 
-.tomorrow-red, pre .variable, pre .attribute, pre .tag, pre .regexp, pre .ruby .constant, pre .xml .tag .title, pre .xml .pi, pre .xml .doctype, pre .html .doctype, pre .css .id, pre .css .class, pre .css .pseudo {
-  color: #cc6666;
-}
+Original style from softwaremaniacs.org (c) Ivan Sagalaev <Maniac@SoftwareManiacs.Org>
 
-.tomorrow-orange, pre .number, pre .preprocessor, pre .built_in, pre .literal, pre .params, pre .constant {
-  color: #de935f;
-}
-
-.tomorrow-yellow, pre .ruby .class .title, pre .css .rules .attribute {
-  color: #f0c674;
-}
-
-.tomorrow-green, pre .string, pre .value, pre .inheritance, pre .header, pre .ruby .symbol, pre .xml .cdata {
-  color: #b5bd68;
-}
-
-.tomorrow-aqua, pre .css .hexcolor {
-  color: #8abeb7;
-}
-
-.tomorrow-blue, pre .function, pre .python .decorator, pre .python .title, pre .ruby .function .title, pre .ruby .title .keyword, pre .perl .sub, pre .javascript .title, pre .coffeescript .title {
-  color: #81a2be;
-}
-
-.tomorrow-purple, pre .keyword, pre .javascript .function {
-  color: #b294bb;
-}
+*/
 
 pre code {
-  display: block;
-  background: #1d1f21;
-  color: #c5c8c6;
-  padding: 0.5em;
+  display: block; padding: 0.5em;
+  background: white; color: black;
 }
 
-pre .coffeescript .javascript,
-pre .javascript .xml,
-pre .tex .formula,
-pre .xml .javascript,
-pre .xml .vbscript,
-pre .xml .css,
-pre .xml .cdata {
-  opacity: 0.5;
+pre .string,
+pre .tag .value,
+pre .filter .argument,
+pre .addition,
+pre .change,
+pre .apache .tag,
+pre .apache .cbracket,
+pre .nginx .built_in,
+pre .tex .formula {
+  color: #888;
+}
+
+pre .comment,
+pre .template_comment,
+pre .shebang,
+pre .doctype,
+pre .pi,
+pre .javadoc,
+pre .deletion,
+pre .apache .sqbracket {
+  color: #CCC;
+}
+
+pre .keyword,
+pre .tag .title,
+pre .ini .title,
+pre .lisp .title,
+pre .clojure .title,
+pre .http .title,
+pre .nginx .title,
+pre .css .tag,
+pre .winutils,
+pre .flow,
+pre .apache .tag,
+pre .tex .command,
+pre .request,
+pre .status {
+  font-weight: bold;
 }
