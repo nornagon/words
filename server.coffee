@@ -199,10 +199,9 @@ app.post '/api/update', restrict, (req, res) ->
       throw err if err
       res.json ok: yes
 
-renderPost = (req, res, opts = {}) ->
+renderPost = (req, res, next, opts = {}) ->
   db.get "posts/#{req.params.slug}", (err, post) ->
-    # TODO 404
-    return res.end() if !post
+    return next() if !post
 
     opts.post = post
     opts.model = !!opts.model
@@ -216,12 +215,12 @@ app.get '/', (req, res) ->
     #db.view 'posts/published', { include_docs: true, descending: true, limit: 10 }, (err, posts) ->
     res.render 'index', md: marked, posts: posts
 
-app.get '/:slug', (req, res) ->
-  renderPost req, res
+app.get '/:slug', (req, res, next) ->
+  renderPost req, res, next
 
-app.get '/:slug/edit', restrict, (req, res) ->
-  renderPost req, res, model: true
+app.get '/:slug/edit', restrict, (req, res, next) ->
+  renderPost req, res, next, model: true
 
-port = process.argv[2] ? 8000
+port = process.argv[2] ? 8888
 app.listen port
 console.log "Listening on http://localhost:#{port}"
