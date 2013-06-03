@@ -104,16 +104,15 @@ app.use express.logger 'dev'
 app.use express.static __dirname + '/static'
 app.use express.static __dirname + '/node_modules/marked/lib'
 app.use express.bodyParser()
-app.use app.router
 app.use express.cookieParser 'asdkfkajhdfawefhakej faljkwef lkawef akwjhf'
 app.use express.session()
 #app.use express.csrf()
+app.use app.router
 
 # Middleware to make sure a user is logged in before allowing them to access the page.
 # You could improve this by setting a redirect URL to the login page, and then redirecting back
 # after they've authenticated.
 restrict = (req, res, next) ->
-  return next()
   return next() if req.session.user
   res.redirect '/login'
 
