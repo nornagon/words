@@ -47,14 +47,21 @@ deIndex = (post, batch) ->
 
 #reindex()
 
-getPosts = (path, limit, callback) ->
+getPosts = (path, opts, callback) ->
+  [opts, callback] = [{}, opts] if typeof opts is 'function'
+
+  if opts.reverse
+    opts.start = path + '~'
+    opts.end = path
+  else
+    opts.start = path
+    opts.end = path + '~'
+
+  opts.keys = no
+  opts.valueEncoding = 'utf8'
+
   # Published posts are indexed by creation time.
-  rs = db.createValueStream
-    start: path
-    end: path + '~'
-    keys: no
-    limit: limit
-    valueEncoding: 'utf8'
+  rs = db.createValueStream opts
 
   docs = []
   tasks = 0
@@ -96,9 +103,10 @@ app.set 'views', __dirname + '/views'
 app.use express.logger 'dev'
 app.use express.static __dirname + '/static'
 app.use express.static __dirname + '/node_modules/marked/lib'
+app.use express.bodyParser()
+app.use app.router
 app.use express.cookieParser 'asdkfkajhdfawefhakej faljkwef lkawef akwjhf'
 app.use express.session()
-app.use express.bodyParser()
 #app.use express.csrf()
 
 # Middleware to make sure a user is logged in before allowing them to access the page.
@@ -106,8 +114,6 @@ app.use express.bodyParser()
 # after they've authenticated.
 restrict = (req, res, next) ->
   return next()
-
-
   return next() if req.session.user
   res.redirect '/login'
 
@@ -153,24 +159,11 @@ app.get '/logout', restrict, (req, res, next) ->
 app.get '/login', (req, res) ->
   res.render 'login', csrf:req.session._csrf, user:req.session.user
 
-complete = (req, cb) ->
-  buffer = new Buffer 0
-  ee = new events.EventEmitter
-  req.on 'data', (data) ->
-    newBuffer = new Buffer(buffer.length + data.length)
-    buffer.copy newBuffer
-    data.copy newBuffer, buffer.length
-    buffer = newBuffer
-  req.on 'end', ->
-    cb? buffer
-    ee.emit 'complete', buffer
-  ee
-
 slugFromTitle = (title) ->
   title.toLowerCase().replace(/[^a-z]+/g, '-').substr(0,25).replace(/-$/,'')
 
 app.get '/admin', restrict, (req, res) ->
-  getPosts 'idx/by_date/', null, (err, posts) ->
+  getPosts 'idx/by_date/', (err, posts) ->
     res.setHeader 'cache-control', 'no-store'
     res.render 'admin',
       user: req.session.user
@@ -179,42 +172,36 @@ app.get '/admin', restrict, (req, res) ->
       published: (p for p in posts when p.published)
 
 app.post '/api/add', restrict, (req, res) ->
-  complete req, (buf) ->
-    data = JSON.parse(buf)
-    post =
-      type: 'post'
-      title: data.title
-      body: data.body ? ''
-      published: data.published ? false
-      created_at: (new Date).toISOString()
-      slug: data.slug ? slugFromTitle(data.title)
-    putPost post, (err) ->
-      return res.end JSON.stringify ok: no, err: err if err
-      res.end JSON.stringify ok: yes
-
-app.post '/api/update', restrict, (req, res) ->
-  complete req, (buf) ->
-    data = JSON.parse(buf)
-    getPostBySlug data.slug, (err, r) ->
-      throw err if err
-      for k,v of data.update when k in ['title', 'body', 'published']
-        r[k] = v
-      putPost r, (err) ->
-        throw err if err
-        res.end JSON.stringify ok: yes
+  data = req.body
+  post =
+    type: 'post'
+    title: data.title
+    body: data.body ? ''
+    published: data.published ? false
+    created_at: (new Date).toISOString()
+    slug: data.slug ? slugFromTitle(data.title)
+  putPost post, (err) ->
+    return res.json 500, ok: no, err: err if err
+    res.json ok: yes
 
 app.post '/api/delete', restrict, (req, res) ->
-  complete req, (buf) ->
-    data = JSON.parse buf
-    delPost data.slug, (err) ->
-      if err
-        return res.end JSON.stringify ok: no, err: err
-      res.end JSON.stringify ok: yes
+  delPost req.body.slug, (err) ->
+    if err
+      return res.json 500, ok: no, err: err
+    res.json ok: yes
 
-getPostBySlug = (slug, cb) -> db.get "posts/#{slug}", cb
+app.post '/api/update', restrict, (req, res) ->
+  data = req.body
+  db.get "posts/#{data.slug}", (err, r) ->
+    throw err if err
+    for k,v of data.update when k in ['title', 'body', 'published']
+      r[k] = v
+    putPost r, (err) ->
+      throw err if err
+      res.json ok: yes
 
 renderPost = (req, res, opts = {}) ->
-  getPostBySlug req.params.slug, (err, post) ->
+  db.get "posts/#{req.params.slug}", (err, post) ->
     # TODO 404
     return res.end() if !post
 
@@ -226,7 +213,7 @@ renderPost = (req, res, opts = {}) ->
 app.get '/', (req, res) ->
   last = process.hrtime()
 
-  getPosts 'idx/published/', 10, (err, posts) ->
+  getPosts 'idx/published/', limit:10, reverse:yes, (err, posts) ->
     #db.view 'posts/published', { include_docs: true, descending: true, limit: 10 }, (err, posts) ->
     res.render 'index', md: marked, posts: posts
 

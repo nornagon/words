@@ -143,6 +143,7 @@ li:hover .remove {
 
           var req = new XMLHttpRequest
           req.open('POST', window.location.origin + '/api/add', true)
+          req.setRequestHeader('Content-Type', 'application/json')
           req.onreadystatechange = function() {
             if (req.readyState == 4) {
               newItem.style.webkitTransition = '400ms'
@@ -193,6 +194,7 @@ li:hover .remove {
       }
       var req = new XMLHttpRequest
       req.open('POST', window.location.origin + '/api/delete', true)
+      req.setRequestHeader('Content-Type', 'application/json')
       req.onreadystatechange = function() {
         if (req.readyState == 4) {
           if (req.status == 200) {
