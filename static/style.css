@@ -28,7 +28,6 @@ p {
 h1, h2, h3, h4, h5, h6 {
 	font-family: 'Galdeano';
 	font-weight: normal;
-	font-size: 18px;
 	line-height: 25px;
 	margin: 0 0 1em 0;
 	padding: 0;
@@ -89,5 +88,9 @@ p > code {
   font-style: italic;
   color: rgb(80, 80, 80);
   right: -10;
+}
+
+hr {
+  border: 3px dashed rgba(0,0,0,0.2);
 }
 
