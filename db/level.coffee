@@ -31,19 +31,26 @@ deIndex = (post, batch) ->
 #reindex()
 
 exports.getPostsByDate = (cb) ->
-  getPosts 'idx/by_date/', null, cb
+  getPosts 'idx/by_date/', cb
 
 exports.getPublishedPosts = (limit, cb) ->
-  getPosts 'idx/published/', limit, cb
+  getPosts 'idx/published/', {limit, reverse:yes}, cb
 
-getPosts = (path, limit, callback) ->
+getPosts = (path, opts, callback) ->
+  [opts, callback] = [{}, opts] if typeof opts is 'function'
+
+  if opts.reverse
+    opts.start = path + '~'
+    opts.end = path
+  else
+    opts.start = path
+    opts.end = path + '~'
+
+  opts.keys = no
+  opts.valueEncoding = 'utf8'
+
   # Published posts are indexed by creation time.
-  rs = db.createValueStream
-    start: path
-    end: path + '~'
-    keys: no
-    limit: limit
-    valueEncoding: 'utf8'
+  rs = db.createValueStream opts
 
   docs = []
   tasks = 0

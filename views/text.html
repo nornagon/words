@@ -101,6 +101,7 @@ pre {
   <div class='content'>
     <h1 class='title'>#{post.title}</h1>
     <div class='body'>{# print md post.body #}</div>
+    <div class='footer'>#{config.name}, #{new Date(post.created_at).toDateString()}</div>
   </div>
 {#
   if model {:
@@ -175,6 +176,7 @@ function makeExpandingArea(area) {
   function xhr(method, url, data, cb) {
     var req = new XMLHttpRequest
     req.open(method, url, true)
+    req.setRequestHeader('Content-Type', 'application/json')
     req.onreadystatechange = function() {
       if (req.readyState == 4) {
         if (req.status == 200)
