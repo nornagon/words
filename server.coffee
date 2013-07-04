@@ -1,7 +1,7 @@
+fs = require 'fs'
 express = require 'express'
 events = require 'events'
 request = require 'request'
-level = require 'level'
 marked = require 'marked'
 
 hljs = require('highlight.js')
@@ -15,77 +15,20 @@ marked.setOptions highlight: (code, lang) ->
   catch
     code
 
-OWNER = 'josephg@gmail.com'
+config_defaults =
+  title: 'profound and witty blog title'
+  owner: 'you@your.domain'
+  db: 'level'
+  secret: require('crypto').randomBytes(64).toString()
+  badge: '*'
 
-db = level 'text', valueEncoding: 'json'
+config = try
+  JSON.parse fs.readFileSync './config.json'
+catch e
+  {}
+config.__proto__ = config_defaults
 
-reindex = (callback) ->
-  ws = db.createWriteStream type:'del'
-  rs = db.createReadStream start:'idx/', end:'idx/~', valueEncoding:'utf8'
-  rs.pipe(ws).on 'close', ->
-    rs = db.createValueStream start:'posts/', end:'posts/~'
-    batch = db.batch()
-
-    rs.on 'data', (d) -> indexPost d, batch
-    rs.on 'close', ->
-      console.log 'reindexed'
-      batch.write callback
-
-indexPost = (post, batch) ->
-  batch.put "idx/by_date/#{post.created_at}", post.slug, valueEncoding:'utf8'
-
-  if post.published
-    batch.put "idx/published/#{post.created_at}", post.slug, valueEncoding:'utf8'
-  else
-    batch.del "idx/published/#{post.created_at}"
-
-deIndex = (post, batch) ->
-  batch.del "idx/by_date/#{post.created_at}"
-  if post.published
-    batch.del "idx/published/#{post.created_at}"
-
-
-#reindex()
-
-getPosts = (path, limit, callback) ->
-  # Published posts are indexed by creation time.
-  rs = db.createValueStream
-    start: path
-    end: path + '~'
-    keys: no
-    limit: limit
-    valueEncoding: 'utf8'
-
-  docs = []
-  tasks = 0
-  idx = 0
-  
-  doneTask = ->
-    tasks++
-    if tasks == docs.length + 1
-      callback null, docs
-
-  rs.on 'data', (slug) ->
-    i = idx++
-    db.get "posts/#{slug}", (err, data) ->
-      #console.log 'getposts', err, data
-      docs[i] = data
-      doneTask()
-
-  rs.on 'close', doneTask
-
-putPost = (post, callback) ->
-  batch = db.batch().put "posts/#{post.slug}", post
-  indexPost post, batch
-  batch.write callback
-
-delPost = (slug, callback) ->
-  db.get "posts/#{slug}", (err, post) ->
-    batch = db.batch().del "posts/#{slug}"
-    deIndex post, batch
-    batch.write (err) ->
-      #console.log 'deindex err', err
-      callback err
+db = require "./db/#{config.db}"
 
 app = express()
 
@@ -96,7 +39,7 @@ app.set 'views', __dirname + '/views'
 app.use express.logger 'dev'
 app.use express.static __dirname + '/static'
 app.use express.static __dirname + '/node_modules/marked/lib'
-app.use express.cookieParser 'asdkfkajhdfawefhakej faljkwef lkawef akwjhf'
+app.use express.cookieParser config.secret
 app.use express.session()
 app.use express.bodyParser()
 #app.use express.csrf()
@@ -170,9 +113,10 @@ slugFromTitle = (title) ->
   title.toLowerCase().replace(/[^a-z]+/g, '-').substr(0,25).replace(/-$/,'')
 
 app.get '/admin', restrict, (req, res) ->
-  getPosts 'idx/by_date/', null, (err, posts) ->
+  db.getPostsByDate (err, posts) ->
     res.setHeader 'cache-control', 'no-store'
     res.render 'admin',
+      config: config
       user: req.session.user
       slugFromTitle: slugFromTitle.toString()
       ideas: (p for p in posts when !p.published)
@@ -183,52 +127,49 @@ app.post '/api/add', restrict, (req, res) ->
     data = JSON.parse(buf)
     post =
       type: 'post'
+      config: config
       title: data.title
       body: data.body ? ''
       published: data.published ? false
       created_at: (new Date).toISOString()
       slug: data.slug ? slugFromTitle(data.title)
-    putPost post, (err) ->
+    db.putPost post, (err) ->
       return res.end JSON.stringify ok: no, err: err if err
       res.end JSON.stringify ok: yes
 
 app.post '/api/update', restrict, (req, res) ->
   complete req, (buf) ->
     data = JSON.parse(buf)
-    getPostBySlug data.slug, (err, r) ->
+    db.getPostBySlug data.slug, (err, r) ->
       throw err if err
       for k,v of data.update when k in ['title', 'body', 'published']
         r[k] = v
-      putPost r, (err) ->
+      db.putPost r, (err) ->
         throw err if err
         res.end JSON.stringify ok: yes
 
 app.post '/api/delete', restrict, (req, res) ->
   complete req, (buf) ->
     data = JSON.parse buf
-    delPost data.slug, (err) ->
+    db.delPost data.slug, (err) ->
       if err
         return res.end JSON.stringify ok: no, err: err
       res.end JSON.stringify ok: yes
 
-getPostBySlug = (slug, cb) -> db.get "posts/#{slug}", cb
-
 renderPost = (req, res, opts = {}) ->
-  getPostBySlug req.params.slug, (err, post) ->
+  db.getPostBySlug req.params.slug, (err, post) ->
     # TODO 404
     return res.end() if !post
 
     opts.post = post
     opts.model = !!opts.model
     opts.md = marked
+    opts.config = config
     res.render 'text', opts
 
 app.get '/', (req, res) ->
-  last = process.hrtime()
-
-  getPosts 'idx/published/', 10, (err, posts) ->
-    #db.view 'posts/published', { include_docs: true, descending: true, limit: 10 }, (err, posts) ->
-    res.render 'index', md: marked, posts: posts
+  db.getPublishedPosts 10, (err, posts) ->
+    res.render 'index', md: marked, posts: posts, config: config
 
 app.get '/:slug', (req, res) ->
   renderPost req, res

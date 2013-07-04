@@ -12,6 +12,7 @@
     "toffee": "*",
     "request": "*",
     "consolidate": "*",
-    "level": "*"
+    "level": "*",
+    "cradle": "*"
   }
 }

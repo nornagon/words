@@ -93,7 +93,7 @@ pre {
 </head>
 <body>
   <div id='main'>
-  <div class='badge'><a href='/{# if model then print "admin" #}'>*</a></div>
+  <div class='badge'><a href='/{# if model then print "admin" #}'>#{config.badge}</a></div>
   <div class='content'>
     <h1 class='title'>#{post.title}</h1>
     <div class='body'>{# print md post.body #}</div>
@@ -259,8 +259,9 @@ function makeExpandingArea(area) {
     previewScroll = window.scrollY;
     var main = document.querySelector('#main')
     main.classList.add('editing')
-    if (editScroll !== undefined) { window.scrollTo(window.scrollX,
-      editScroll) }
+    if (editScroll !== undefined) {
+      window.scrollTo(window.scrollX, editScroll)
+    }
   }
   function done() {
     if (!editing) return;
@@ -272,8 +273,9 @@ function makeExpandingArea(area) {
         document.getElementById('edit-title').value;
     var main = document.querySelector('#main')
     main.classList.remove('editing')
-    if (previewScroll !== undefined) { 
-      window.scrollTo(window.scrollX, previewScroll) }
+    if (previewScroll !== undefined) {
+      window.scrollTo(window.scrollX, previewScroll)
+    }
   }
   // hax
   edit()
