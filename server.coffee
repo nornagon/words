@@ -141,7 +141,7 @@ app.post '/api/update', session, restrict, (req, res) ->
       throw err if err
       res.end JSON.stringify ok: yes
 
-renderPost = (req, res, opts = {}) ->
+renderPost = (req, res, next, opts = {}) ->
   db.getPostBySlug req.params.slug, (err, post) ->
     return next() if !post
 
