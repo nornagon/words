@@ -1,0 +1,20 @@
+.badge {
+  font-size: 80px;
+  top: 15px;
+  left: -70px;
+}
+
+strong {
+  color: rgb(139, 23, 0);
+}
+
+pre > code {
+  font-size: 14px;
+  display: block;
+  padding: 1em 1em 1.2em 0.5em;
+  width: 45em;
+
+  border-radius: 3px;
+  border: 1px solid rgb(146, 146, 146);
+  background: rgb(230, 230, 230);
+}
