@@ -3,7 +3,7 @@ body { min-height: 100%; }
 
 html {
   background-color: rgb(245, 245, 245);
-  background: url(/squairy_light.png);
+  background: url(/background.png);
 }
 
 body {
@@ -11,10 +11,12 @@ body {
   font-family: 'Alegreya', Candara, serif;
   margin: 0;
   background-color: hsla(0, 0%, 100%, 0.4);
+  color: #222;
+  font-size: 18px;
 }
 
 #main {
-  width: 30em;
+  width: 34em;
   margin: 100px 0px 100px 140px;
   display: inline-block;
 }
@@ -35,12 +37,12 @@ h1 {
 .badge {
   font-family: 'Alegreya';
   margin-bottom: 0;
-  font-size: 120px;
+  font-size: 80px;
   line-height: 0;
   text-shadow: 0px 1px 1px rgba(255,255,255,0.9), 0px 1px 3px rgba(0,0,0,0.15);
   position: relative;
-  top: 40px;
-  left: -80px;
+  top: 15px;
+  left: -70px;
 }
 .badge a {
   text-decoration: none;
@@ -55,20 +57,23 @@ a:hover {
 
 strong {
   font-weight: normal;
-  color: hsl(10, 100%, 37%);
+  color: rgb(139, 23, 0);
 }
 
 pre > code {
+  font-size: 14px;
   display: block;
-  padding-left: 2em;
-  padding-bottom: 1em;
-  border-radius: 3px;
-}
+  padding: 1em 1em 1.2em 0.5em;
+  width: 45em;
 
-h2 > code {
-  font-size: 16px;
+  border-radius: 3px;
+  border: 1px solid rgb(146, 146, 146);
+  background: rgb(230, 230, 230);
 }
 
 p > code {
-  font-size: 14px;
+  font-size: 15px;
+  background-color: rgb(216, 216, 216);
+  padding: 0px 2px 0px 2px;
 }
+
