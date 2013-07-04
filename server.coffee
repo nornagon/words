@@ -45,12 +45,12 @@ app.use express.cookieParser config.secret
 app.use express.session()
 app.use app.router
 #app.use express.csrf()
+app.use app.router
 
 # Middleware to make sure a user is logged in before allowing them to access the page.
 # You could improve this by setting a redirect URL to the login page, and then redirecting back
 # after they've authenticated.
 restrict = (req, res, next) ->
-  return next()
   return next() if req.session.user
   res.redirect '/login'
 
