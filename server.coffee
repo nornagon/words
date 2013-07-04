@@ -24,7 +24,7 @@ config_defaults =
   badge: '*'
 
 config = try
-  JSON.parse fs.readFileSync './config.json'
+  JSON.parse fs.readFileSync "#{__dirname}/config.json"
 catch e
   {}
 config.__proto__ = config_defaults
