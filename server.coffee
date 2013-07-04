@@ -88,8 +88,8 @@ app.post '/auth', session, (req, res, next) ->
 # - Delete the user's logged in status from their session object (ie, record they've been
 #   logged out on the server)
 # - Tell persona they've been logged out in the browser.
-app.get '/logout', (req, res, next) ->
-  res.render 'logout', user: req.session.user
+app.get '/logout', session, (req, res, next) ->
+  res.render 'logout', user: req.session?.user
   delete req.session.user if req.session
   req.session = null
 
