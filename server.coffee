@@ -140,8 +140,7 @@ app.post '/api/update', restrict, (req, res) ->
 
 renderPost = (req, res, opts = {}) ->
   db.getPostBySlug req.params.slug, (err, post) ->
-    # TODO 404
-    return res.end() if !post
+    return next() if !post
 
     opts.post = post
     opts.model = !!opts.model
@@ -153,12 +152,12 @@ app.get '/', (req, res) ->
   db.getPublishedPosts 10, (err, posts) ->
     res.render 'index', md: marked, posts: posts, config: config
 
-app.get '/:slug', (req, res) ->
-  renderPost req, res
+app.get '/:slug', (req, res, next) ->
+  renderPost req, res, next
 
-app.get '/:slug/edit', restrict, (req, res) ->
-  renderPost req, res, model: true
+app.get '/:slug/edit', restrict, (req, res, next) ->
+  renderPost req, res, next, model: true
 
-port = process.argv[2] ? 8000
+port = process.argv[2] ? 8888
 app.listen port
 console.log "Listening on http://localhost:#{port}"
