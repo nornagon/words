@@ -1,3 +1,7 @@
+html {
+  background: url(/squairy_light.png);
+}
+
 .badge {
   font-size: 80px;
   top: 15px;
