@@ -2,14 +2,16 @@
   "name": "text",
   "version": "0.0.0",
   "description": "Mah blog",
+  "private": true,
   "homepage": "",
   "author": "Jeremy Apthorp <nornagon@nornagon.net>",
   "dependencies": {
+    "marked": "*",
+    "highlight.js": "*",
     "express": "~3.x",
-    "cradle": "*",
     "toffee": "*",
     "request": "*",
-    "pagedown": "~1",
-    "consolidate": "*"
+    "consolidate": "*",
+    "level": "*"
   }
 }
