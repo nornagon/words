@@ -1,6 +1,5 @@
 fs = require 'fs'
 express = require 'express'
-events = require 'events'
 request = require 'request'
 marked = require 'marked'
 
