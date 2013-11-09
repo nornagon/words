@@ -1,0 +1,19 @@
+html {
+  background: url(/gray_jean.png);
+}
+@media screen and (-webkit-min-device-pixel-ratio: 2), screen and (max--moz-device-pixel-ratio: 2) {
+html {
+  background: url(/gray_jean_@2X.jpg);
+  background-size: 150px 150px;
+}
+}
+
+.badge {
+  font-size: 120px;
+  top: 40px;
+  left: -80px;
+}
+
+p > code {
+  font-size: 16px;
+}
