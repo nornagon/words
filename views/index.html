@@ -7,40 +7,11 @@
 <link href='/custom_style.css' rel='stylesheet' type='text/css'>
 <title>#{config.title}</title>
 <style>
-.content {
-  outline: none;
-}
-
-.content + .content {
+.post + .post {
   margin-top: 5em;
 }
-
-#main .edit {
-  display: none;
-}
-#main.editing .edit {
-  display: block;
-}
-#main.editing .content {
-  display: none;
-}
-
-#main .doneLink {
-  display: none;
-}
-#main.editing .doneLink {
-  display: initial;
-}
-#main.editing .editLink {
-  display: none;
-}
-
-textarea, 
-pre {
-  margin: 0;
-  padding: 0;
-  outline: 0;
-  border: 0;
+h1 a {
+  text-decoration: none;
 }
 </style>
 </head>
@@ -49,7 +20,7 @@ pre {
   <div class='badge'><a href='/'>#{config.badge}</a></div>
   {#
     for post in posts {:
-  <div class='content'>
+  <div class='post'>
     <h1 class='title'><a href="#{post.slug}">#{post.title}</a></h1>
     <div class='body'>{# print md post.body #}</div>
   </div>
