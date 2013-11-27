@@ -36,7 +36,7 @@ app.engine 'html', require('consolidate').toffee
 app.set 'view engine', 'html'
 app.set 'views', __dirname + '/views'
 
-app.use express.logger 'dev'
+app.use express.logger()
 app.use express.static __dirname + '/static'
 app.use express.static __dirname + '/node_modules/marked/lib'
 app.use express.bodyParser()
