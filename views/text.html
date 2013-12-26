@@ -146,16 +146,16 @@ function makeExpandingArea(area) {
   area.addEventListener('input', function() {
     span.textContent = area.value;
   }, false);
-  area.onkeydown = function(e) {
-    if (e.keyCode === 9) {
-      if (editing) done()
-      else edit()
-      e.preventDefault()
-    }
-  }
   span.textContent = area.value;
   container.className += ' active';
   return container;
+}
+window.onkeydown = function(e) {
+  if (e.keyCode === 9 && e.srcElement.id !== 'edit-title') {
+    if (editing) done()
+    else edit()
+    e.preventDefault()
+  }
 }
 </script>
 <script>
@@ -283,11 +283,22 @@ function makeExpandingArea(area) {
     if (editScroll !== undefined) {
       window.scrollTo(window.scrollX, editScroll)
     }
+    if (typeof editFocus !== 'undefined') {
+      editFocus.element.focus()
+      editFocus.element.setSelectionRange(editFocus.selectionStart,
+          editFocus.selectionEnd, editFocus.selectionDirection)
+    }
   }
   function done() {
     if (!editing) return;
     editing = false;
     editScroll = window.scrollY;
+    editFocus = {
+      element: document.activeElement,
+      selectionStart: document.activeElement.selectionStart,
+      selectionEnd: document.activeElement.selectionEnd,
+      selectionDirection: document.activeElement.selectionDirection,
+    }
     document.querySelector('.body').innerHTML =
         marked(document.getElementById('edit-text').value);
     document.querySelector('.title').innerHTML =
